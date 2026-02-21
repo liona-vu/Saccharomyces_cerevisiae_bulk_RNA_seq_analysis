@@ -1,6 +1,7 @@
 #!/bin/bash
 # Based on the tutorial below:
-#https://combine-lab.github.io/salmon/getting_started/
+# https://combine-lab.github.io/salmon/getting_started/
+# Run the script to download all S. cerevisiae data
 
 mkdir raw_data
 cd raw_data
