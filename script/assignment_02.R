@@ -413,11 +413,6 @@ gsea_thin_vs_mature <- gsea_analysis(resLFC_mature_vs_thin, "BP", "COMMON")
 gsea_plot_mature_vs_thin <- gseaplot2(gsea_thin_vs_mature, geneSetID = c(1:3), 
                                          color = c("#E495A5", "#86B875", "#7DB0DD"),
                                          pvalue_table = TRUE, 
-                                         title = "GSEA of Early to Thin biofilm formation")
+                                         title = "GSEA of Thin to Mature biofilm formation")
 
-plot_list(gsea_plot_mature_vs_early, gsea_plot_early_vs_thin, gsea_plot_mature_vs_thin)
-
-
-
-gseaplot(gsea_results, by = "all", geneSetID = 1)
-head(gsea_results)
+plot_list(gsea_plot_early_vs_thin, gsea_plot_mature_vs_thin, gsea_plot_mature_vs_early)
