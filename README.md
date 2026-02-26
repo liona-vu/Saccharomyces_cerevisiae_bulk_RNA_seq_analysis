@@ -1,2 +1,5 @@
 # Saccharomyces_cerevisiae_bulk_RNA_seq_analysis
 A workflow outlining the steps to analyze bulk transcriptomic data on Saccharomyces cerevisiae
+
+# Introduction
+*Saccharomyces cerevisiae (S. cerevisiae)*, also known as brewer’s yeast, plays an important role in manufacturing alcoholic drinks such as beer and wine. In the context of wine, flor yeast is a specialized type of S. cerevisiae that forms biofilms/velum on the surface of wine during the winemaking process. There are three biofilm stages: early, thin, and mature which occur in that specific order. In terms of in biomedical research, it is a widely used and well-characterized model organism. In fact, it was one of the first eukaryotic model organisms where RNA-sequencing (RNA-seq) has been employed (Nagalakshmi et al., 2008). One of the main goals of RNA-sequencing is to count the complete set of all transcripts in a cell which includes its mRNA, tRNA, and non-coding RNA. Consequently, this allows for further downstream analysis that includes differential gene expression (DEGs) and gene ontology (GO) analysis.
