@@ -37,6 +37,7 @@ p1 <- ggplot(data = summary, aes(x = Sample, y = salmon.percent_mapped, fill = S
   theme_minimal() +
   theme(legend.position="none") +
   labs(x = "Accession Numbers", y = "Percent (%) Mapped ") +
+  scale_y_continuous(breaks = seq(0,100, 10)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   coord_cartesian(ylim = c(0,100))
 
@@ -46,6 +47,7 @@ p2 <- ggplot(data = summary, aes(x = Sample, y = salmon.num_mapped, fill = Sampl
   theme_minimal() +
   theme(legend.position="none") +
   labs(x = "Accession Numbers", y = "Mapped reads (Millions) ") +
+  scale_y_continuous(breaks = seq(0,10, 1)) +
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   coord_cartesian(ylim = c(0,10))
 
@@ -68,11 +70,11 @@ p4 <- ggplot(data = summary, aes(x = Sample, y = fastqc.total_sequences, fill = 
   coord_cartesian(ylim = c(0,10))
 
 
-summary_plots <- grid.arrange(p1, p2, p3, p4)
+summary_plots <- grid.arrange(p1, p2, ncol = 2)
 
-# ====================================================
-# Differential gene expression analysis - set up 
-# ====================================================
+# ======================================================
+# DESeq2 Differential gene expression analysis
+# ======================================================
 
 #import data using tximport
 txdb <- txdbmaker::makeTxDbFromGFF("ncbi_dataset/ncbi_dataset/data/GCF_000146045.2/genomic.gff")
@@ -101,12 +103,11 @@ dds_2 <- DESeq(dds, test = "Wald")
 
 #Check comparison names which will be used in results
 resultsNames(dds_2)
+
 #Generate a results table for stages of yeast and comparing between thin and early biofilms
-#res_thin_vs_early <- results(dds_2, name="stage_Thin_vs_Early")
 res_thin_vs_early <- results(dds_2, contrast=c("stage", "Thin", "Early"))
 
 #Generate a results table comparing between mature and early biofilms
-#res_mature_vs_early <- results(dds_2, name="stage_Mature_vs_Early")
 res_mature_vs_early <- results(dds_2, contrast = c("stage", "Mature", "Early"))
 
 #Generate a results table comparing between mature and thin biofilms
@@ -121,7 +122,7 @@ res_mature_vs_thin
 resLFC_thin_vs_early <- lfcShrink(dds_2, coef="stage_Thin_vs_Early", type="apeglm")
 resLFC_mature_vs_early <- lfcShrink(dds_2, coef ="stage_Mature_vs_Early", type="apeglm")
 
-# Relevel factor to get the other comparison, thin vs mature oh my Goooddddddd
+# Relevel factor to get the other comparison, thin vs mature
 dds$stage <- relevel(dds$stage, ref = "Thin") #Use Thin stage as the reference
 
 #Run DESeq again
@@ -132,21 +133,17 @@ resultsNames(dds_3) #Check if Thin vs Mature is here
 # Now can run LFC Shrinkage
 resLFC_mature_vs_thin <- lfcShrink(dds_3, coef = "stage_Mature_vs_Thin", type="apeglm")
 
-# ====================================================
-# Plotting MA plots and checking structure
-# ====================================================
+# =======================================================
+# Plotting MA plots, volcano plots, and checking structure
+# =======================================================
 
 # MA plot without LFC shrinkage for quality control to see if normalization occured
 par(mfrow = c(2, 3))
 plotMA(res_mature_vs_early, ylim=c(-10,10))
 plotMA(res_thin_vs_early, ylim=c(-10, 10))
 plotMA(res_mature_vs_thin, ylim =c(-10,10))
-#THIS FUCKS UP RSTUDIO
-#idx <- identify(res_mature_vs_early$baseMean, res_mature_vs_early$log2FoldChange)
-#rownames(res_mature_vs_early)[idx]
 
 # MA with apeglm applied
-#par(mfrow = c(1, 3))
 plotMA(resLFC_mature_vs_early, ylim=c(-10,10))
 plotMA(resLFC_thin_vs_early, ylim=c(-10, 10))
 plotMA(resLFC_mature_vs_thin, ylim=c(-10,10))
@@ -158,9 +155,8 @@ resLFC_mature_vs_thin <- na.omit(resLFC_mature_vs_thin)
 
 # Volcano plot
 
-# need to mark genes as upregulated, downregulated, or not significant to colour them in ggplot
-# Exclude genes with under 2-fold change (log2FoldChange < 1)
-# Create function to plot volcano plot and avoid repeating code
+# Create function to plot volcano plot and avoid repeating code for categorizing genes as upregulated, downregulated, or not significant to colour them in ggplot
+# Exclude genes under 2-fold change (log2FoldChange < 1)
 volcano_plot_fn <- function(lfc_deseq2, title_input) {
   lfc_df <- as.data.frame(lfc_deseq2)
   lfc_df$gene <- rownames(lfc_df)
@@ -168,28 +164,23 @@ volcano_plot_fn <- function(lfc_deseq2, title_input) {
                                                   ifelse(lfc_df$log2FoldChange > 0, "Up", "Down"), "Not Sig")
   lfc_df <- na.omit(lfc_df)
   
-  # Here's some ggplot code for a volcano plot
-  # We plot log2foldchange against -log10(adjusted p value)
-  
+  # plot log2foldchange against -log10(adjusted p value)
   plot <- ggplot(lfc_df, aes(x = log2FoldChange, y = -log10(pvalue), color = significant)) +
     geom_point() +
     scale_color_manual(values = c("Down" = "blue", "Not Sig" = "gray", "Up" = "red")) +
     labs(x = "Log2 Fold Change", y = "-Log10 p-value", 
          title = paste0("Volcano Plot ", title_input)) +
-    theme(legend.position = "right") #+ 
-#    theme_minimal()
+    theme(legend.position = "right")
   
   return(plot)
 }
 
-# Generate volcano plot early to mature
+# Generate volcano plot for all stages
 vp_1 <- volcano_plot_fn(resLFC_mature_vs_early, "Early to Mature")
 vp_2 <- volcano_plot_fn(resLFC_thin_vs_early, "Early to Thin")
 vp_3 <- volcano_plot_fn(resLFC_mature_vs_thin, "Thin to Mature")
 
-grid.arrange(vp_2, vp_3, vp_1, ncol = 3)
-#top_genes_mature_vs_early <- head(order(abs(resLFC_mature_vs_early$padj), decreasing = FALSE), 20)
-#gene_names_mature_vs_early <- rownames(resLFC_mature_vs_early)[top_genes_mature_vs_early]
+grid.arrange(vp_2, vp_3, vp_1, ncol = 2)
 
 # Make function to take LFC shrink results, filter by padj< 0.05, and select the top 20 genes
 top_genes <- function(dataframe) {
@@ -202,23 +193,6 @@ top_genes <- function(dataframe) {
   return(genes_names)
 }
 
-#filtered_df <- as.data.frame(resLFC_mature_vs_early) %>%
- # filter(padj < 0.5) %>%
-  #arrange(desc(abs(log2FoldChange)))
-
-#length(row.names(x))
-#head(x, n = 20)
-
-#resLFC_mature_vs_early_filtered <- DESeqResults(filtered_df)
-#class(resLFC_mature_vs_early_filtered)
-#gene_names_mature_vs_early <- head(rownames(resLFC_mature_vs_early_filtered), n =20)
-
-#top_genes_thin_vs_early <- head(order(abs(resLFC_thin_vs_early$padj), decreasing = FALSE), n = 20)
-#gene_names_thin_vs_early <- rownames(resLFC_thin_vs_early)[top_genes_thin_vs_early]
-
-#top_genes_mature_vs_thin <- head(order(abs(resLFC_mature_vs_thin$padj), decreasing = FALSE), n = 20)
-#gene_names_mature_vs_thin <- rownames(resLFC_mature_vs_thin)[top_genes_mature_vs_thin]
-
 # Extract transformed & normalized counts with a variance stabilizing transformation
 vsd <- vst(dds_2)
 
@@ -229,7 +203,6 @@ mat_mature_vs_early <- assay(vsd)[gene_names_mature_vs_early, ]
 # Create heatmap visualizing the top 20 differential expressed genes for mature vs early
 p5 <- pheatmap(mat_mature_vs_early, 
                color = inferno(100),
-         #color = colorRampPalette(c("green", "white", "red"))(100),
          scale = "row",
          cluster_rows = TRUE,
          cluster_cols = TRUE,
@@ -243,7 +216,6 @@ mat_thin_vs_early <- assay(vsd)[gene_names_thin_vs_early, ]
 
 p6 <- pheatmap(mat_thin_vs_early, 
                color = inferno(100),
-        # color = colorRampPalette(c("steelblue", "white", "salmon"))(100),
          scale = "row",
          cluster_rows = TRUE,
          cluster_cols = TRUE,
@@ -266,7 +238,9 @@ p7 <- pheatmap(mat_mature_vs_thin,
                show_colnames = TRUE,
                main = "Thin vs Mature")
 
+#Plot all heatmap together
 grid.arrange(p6[[4]], p7[[4]], p5[[4]], ncol = 3)
+
 #PCA Plot
 
 # Get the coordinates using plotPCA from DESeq2
@@ -279,7 +253,6 @@ percentVar <- round(100 * attr(pca_data, "percentVar"))
 ggplot(pca_data, aes(x = PC1, y = PC2, color = stage, shape = stage, label = name)) +
   geom_point(size = 4) +
   theme_minimal() +
- # geom_text(hjust = 0.1, vjust = 0.1) +
   geom_label_repel(box.padding = 0.75) +
   xlab(paste0("PC1: ", percentVar[1], "% variance")) +
   ylab(paste0("PC2: ", percentVar[2], "% variance")) +
@@ -287,17 +260,19 @@ ggplot(pca_data, aes(x = PC1, y = PC2, color = stage, shape = stage, label = nam
   theme(plot.title = element_text(size=15, hjust = 0.5, face = "bold"))
 
 # ====================================================
-# ORA - Gene analysis for early to/vs thin stage
+# ORA - Gene analysis for all three stages comparison
 # ====================================================
 
-#keytypes(org.Sc.sgd.db)
+#check keytypes for database
+keytypes(org.Sc.sgd.db)
 
-#Create function for ORA 
+#Create function for ORA analysis that takes in lcf shrinkage results and ontology type (i.e. BP, CC)
 gene_expression_compare <- function(lfc_results, ont) {
   #Create data frame and take names
   as_dataframe <- as.data.frame(lfc_results)
   ensembl_ids <- rownames(as_dataframe)
   
+  #Convert biological IDs from genename to entreid and ensembl
   gene_map <- bitr(ensembl_ids, 
                    fromType = "GENENAME", 
                    toType = c("ENTREZID", "ENSEMBL"),
@@ -339,22 +314,21 @@ gene_expression_compare <- function(lfc_results, ont) {
                                           universe = all_genes, # Benjamini Hochberg
                                           qvalueCutoff = 0.02,
                                           readable = FALSE)
-  return(compare)
+  #Remove redundant GO terms
+  compare_2 <- clusterProfiler::simplify(x = compare, 
+                            cutoff = 0.7,
+                            by = "p.adjust",
+                            select_fun = min)
+  return(compare_2)
 }
 
 # apply function for ORA for thin vs early stages
 compare_thin_vs_early <- gene_expression_compare(resLFC_thin_vs_early, "BP")
-test <- clusterProfiler::simplify(x = compare_thin_vs_early, 
-                                  cutoff = 0.7,
-                                  by = "p.adjust",
-                                  select_fun = min,
-                                  measure = "Wang")
-dp <- dotplot(test, showC)
 
+#plot ORA results
 dot_plot_1 <- dotplot(compare_thin_vs_early, showCategory = 10, title = "GO Biological Process \n Early vs Thin Stage")
 
 # ORA - Gene analysis for thin to/vs mature stage
-
 compare_mature_vs_thin <- gene_expression_compare(resLFC_mature_vs_thin, "BP")
 dot_plot_2 <- dotplot(compare_mature_vs_thin, showCategory = 10, 
                       title = "GO Biological Processes \n Thin vs Mature Stage")
@@ -366,8 +340,13 @@ dot_plot_3 <- dotplot(compare_early_vs_mature, showCategory = 10,
 
 grid.arrange(dot_plot_1, dot_plot_2, dotplot_3, ncol= 3, nrow = 1)
 
-# GSEA analysis 
-# Make a function
+# ====================================================
+# GSEA analysis for all three stages
+# ====================================================
+# Tutorial can be accessed from the link below:
+# https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html
+
+# Make a function that takes in LFC shrinkage results, ontology analysis, and keytype
 gsea_analysis <- function (LFC_results, ont, keytype) {
   gene_list_df <- as.data.frame(LFC_results)
   gene_list_df <- na.omit(gene_list_df)
@@ -380,31 +359,34 @@ gsea_analysis <- function (LFC_results, ont, keytype) {
   
   gene_list <- sort(gene_list, decreasing = TRUE)
   
+  #run GSEA 
   gsea_results <- gseGO(geneList = gene_list,
                         ont = "BP",
                         OrgDb = org.Sc.sgd.db, 
                         keyType = "COMMON",
                         pvalueCutoff = 0.05,
+                        pAdjustMethod = "BH",
                         verbose =  TRUE, 
-                        eps = 0 ) #P values less than 1.0 e-10
+                        eps = 0, 
+                        by = "fgsea") #P values less than 1.0 e-10
 return(gsea_results)
-                        
 }
 
+#Run function and plot enrichment plot for all three stages
 gsea_mature_vs_early <- gsea_analysis(resLFC_mature_vs_early, "BP", "COMMON")
 
 gsea_plot_mature_vs_early<- gseaplot2(gsea_mature_vs_early, geneSetID = c(1,2,3), 
                                       color = c("#E495A5", "#86B875", "#7DB0DD"),
-                                      pvalue_table = TRUE, 
-                                      title = "GSEA of Early to Mature biofilm formation")
+                                      pvalue_table = FALSE, 
+                                      title = "GSEA of Early to Mature Biofilm Formation")
 
 
 gsea_early_vs_thin <- gsea_analysis(resLFC_thin_vs_early, "BP", "COMMON")
 
 gsea_plot_early_vs_thin <- gseaplot2(gsea_early_vs_thin, geneSetID = c(1:3),
                                          color = c("#E495A5", "#86B875", "#7DB0DD"),
-                                         pvalue_table = TRUE, 
-                                         title = "GSEA of Early to Thin biofilm formation")
+                                         pvalue_table = FALSE, 
+                                         title = "GSEA of Early to Thin Biofilm Formation")
 
 
 
@@ -412,7 +394,11 @@ gsea_thin_vs_mature <- gsea_analysis(resLFC_mature_vs_thin, "BP", "COMMON")
 
 gsea_plot_mature_vs_thin <- gseaplot2(gsea_thin_vs_mature, geneSetID = c(1:3), 
                                          color = c("#E495A5", "#86B875", "#7DB0DD"),
-                                         pvalue_table = TRUE, 
-                                         title = "GSEA of Thin to Mature biofilm formation")
+                                         pvalue_table = FALSE, 
+                                         title = "GSEA of Thin to Mature Biofilm Formation")
 
 plot_list(gsea_plot_early_vs_thin, gsea_plot_mature_vs_thin, gsea_plot_mature_vs_early)
+
+gseaplot(gsea_results, by = "all", geneSetID = 1)
+head(gsea_results)
+
