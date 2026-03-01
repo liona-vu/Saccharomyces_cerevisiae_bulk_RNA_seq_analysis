@@ -117,7 +117,8 @@ res_mature_vs_thin <- results(dds_2, contrast= c("stage", "Mature", "Thin"))
 res_mature_vs_early
 res_thin_vs_early
 res_mature_vs_thin
-
+resLFC_mature_vs_early["FIT3", ]
+resLFC_mature_vs_thin["FIT3", ]
 #Shrink LFC for better and accurate gene counts
 resLFC_thin_vs_early <- lfcShrink(dds_2, coef="stage_Thin_vs_Early", type="apeglm")
 resLFC_mature_vs_early <- lfcShrink(dds_2, coef ="stage_Mature_vs_Early", type="apeglm")
@@ -201,6 +202,14 @@ gene_names_mature_vs_early <- top_genes(resLFC_mature_vs_early)
 mat_mature_vs_early <- assay(vsd)[gene_names_mature_vs_early, ]
 
 # Create heatmap visualizing the top 20 differential expressed genes for mature vs early
+annotate_colours <- data.frame(Stage = factor(rep(c("Mature", "Thin", "Early"), 
+                                                  each = 3)))
+
+rownames(annotate_colours) <- colnames(mat_mature_vs_early)
+ann_colours <- list(Stage = c("Mature" = "#E495A5",
+                              "Thin" = "#86B875",
+                              "Early" = "#7DB0DD"))
+
 p5 <- pheatmap(mat_mature_vs_early, 
                color = inferno(100),
          scale = "row",
@@ -208,8 +217,11 @@ p5 <- pheatmap(mat_mature_vs_early,
          cluster_cols = TRUE,
          sample_table = sample_table,
          show_rownames = TRUE,
-         show_colnames = FALSE,
-         main = "Early vs Mature")
+         show_colnames = TRUE,
+         main = "Early to Mature",
+         annotation_col = annotate_colours,
+         annotation_colors = ann_colours)
+
 
 gene_names_thin_vs_early <- top_genes(resLFC_thin_vs_early)
 mat_thin_vs_early <- assay(vsd)[gene_names_thin_vs_early, ]
@@ -222,7 +234,9 @@ p6 <- pheatmap(mat_thin_vs_early,
          sample_table = sample_table,
          show_rownames = TRUE,
          show_colnames = TRUE,
-         main = "Early vs Thin")
+         main = "Early to Thin",
+         annotation_col = annotate_colours,
+         annotation_colors = ann_colours)
 
 gene_names_mature_vs_thin <- top_genes(resLFC_mature_vs_thin)
 mat_mature_vs_thin <- assay(vsd)[gene_names_mature_vs_thin,]
@@ -236,13 +250,14 @@ p7 <- pheatmap(mat_mature_vs_thin,
                sample_table = sample_table,
                show_rownames = TRUE,
                show_colnames = TRUE,
-               main = "Thin vs Mature")
+               main = "Thin to Mature",
+              annotation_col = annotate_colours,
+              annotation_colors = ann_colours)
 
 #Plot all heatmap together
 grid.arrange(p6[[4]], p7[[4]], p5[[4]], ncol = 3)
 
-#PCA Plot
-
+# Generate PCA Plot
 # Get the coordinates using plotPCA from DESeq2
 pca_data <- plotPCA(vsd, intgroup = "stage", returnData = TRUE)
 
@@ -310,8 +325,8 @@ gene_expression_compare <- function(lfc_results, ont) {
                                           OrgDb = org.Sc.sgd.db,
                                           ont = ont,
                                           pvalueCutoff = 0.05,
-                                          pAdjustMethod = "BH",
-                                          universe = all_genes, # Benjamini Hochberg
+                                          pAdjustMethod = "BH",# Benjamini Hochberg
+                                          universe = all_genes, 
                                           qvalueCutoff = 0.02,
                                           readable = FALSE)
   #Remove redundant GO terms
@@ -340,13 +355,69 @@ dot_plot_3 <- dotplot(compare_early_vs_mature, showCategory = 10,
 
 grid.arrange(dot_plot_1, dot_plot_2, dotplot_3, ncol= 3, nrow = 1)
 
-# ====================================================
-# GSEA analysis for all three stages
-# ====================================================
-# Tutorial can be accessed from the link below:
-# https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html
+#kegg analysis
+# make function for kegg analysis
+kegg_analysis <- function(LFC_results) {
+  
+  as_dataframe <- as.data.frame(LFC_results)
+  ensembl_ids <- rownames(as_dataframe)
+  
+  #Convert biological IDs from genename to entreid and ensembl
+  gene_map <- bitr(ensembl_ids, 
+                   fromType = "GENENAME", 
+                   toType = c("ENTREZID", "ENSEMBL"),
+                   OrgDb = org.Sc.sgd.db)
+  
+  as_dataframe$GENENAME <- rownames(as_dataframe)
+  
+  dataframe_2 <- merge(as_dataframe, gene_map, by = "GENENAME", all.x = TRUE)
+  
+  sig_up_genes_ensembl <-  dataframe_2%>%
+    filter(padj < 0.05 & log2FoldChange > 1) %>%
+    pull(ENSEMBL) %>%
+    na.omit() %>%
+    unique()
+  
+  sig_down_genes_ensembl <-  dataframe_2%>%
+    filter(padj < 0.05 & log2FoldChange < - 1) %>%
+    pull(ENSEMBL) %>%
+    na.omit() %>%
+    unique()
+  
+  #SetReadable is from DOSE which is for human data? Probably not needed here...
+  #kegg_enrich <- setReadable(kegg_enrich, 
+  #          OrgDb = org.Sc.sgd.db, 
+  #      keyType = "ENTREZID")
+  
+  #kegg analysis
+  kegg_enrich <- compareCluster(geneClusters = list(Upregulated = sig_up_genes_ensembl,
+                                                    Downregulated = sig_down_genes_ensembl),
+                                fun = "enrichKEGG",
+                                organism = 'sce',
+                                pvalueCutoff = 0.05,
+                                qvalueCutoff = 0.2)
+  return(kegg_enrich)
+}
 
-# Make a function that takes in LFC shrinkage results, ontology analysis, and keytype
+keg_early_to_thin <- kegg_analysis(resLFC_thin_vs_early)
+kegg_thin_to_mature <- kegg_analysis(resLFC_mature_vs_thin)
+kegg_early_to_mature <- kegg_analysis(resLFC_mature_vs_early)
+# Dot plots
+
+kegg_dotplot_1 <- dotplot(keg_early_to_thin, showCategory = 15, title = "KEGG Pathway Enrichment \n Early to Thin")
+kegg_dotplot_2 <- dotplot(kegg_thin_to_mature, showCategory = 15, title = "KEGG Pathway Enrichment\nThin to Mature")
+kegg_dotplot_3 <- dotplot(kegg_early_to_mature, showCategory = 15, title = "KEGG Pathway Enrichment\nEarly to Mature")
+
+plot_list(kegg_dotplot_1, kegg_dotplot_2, kegg_dotplot_3)
+
+# ====================================================
+# Optional: GSEA analysis for all three stages (cuz I was curious about GSEA)
+# ====================================================
+
+# Analyis tutorial can be accessed from the link below:
+# https://learn.gencore.bio.nyu.edu/rna-seq-analysis/gene-set-enrichment-analysis/
+
+# Make a function that takes in LFC shrinkage results, ontology analysis, and keytype. also does data wrangling to get the proper gene names
 gsea_analysis <- function (LFC_results, ont, keytype) {
   gene_list_df <- as.data.frame(LFC_results)
   gene_list_df <- na.omit(gene_list_df)
@@ -361,18 +432,27 @@ gsea_analysis <- function (LFC_results, ont, keytype) {
   
   #run GSEA 
   gsea_results <- gseGO(geneList = gene_list,
-                        ont = "BP",
+                        ont = ont,
                         OrgDb = org.Sc.sgd.db, 
-                        keyType = "COMMON",
+                        keyType = keytype,
                         pvalueCutoff = 0.05,
                         pAdjustMethod = "BH",
                         verbose =  TRUE, 
-                        eps = 0, 
-                        by = "fgsea") #P values less than 1.0 e-10
-return(gsea_results)
+                        eps = 0, #P values less than 1.0 e-10
+                        by = "fgsea")
+  
+  #remove redundant go terms
+  #https://github.com/YuLab-SMU/clusterProfiler/issues/28
+  gsea_results_2 <- clusterProfiler::simplify(x = gsea_results, 
+                                         cutoff = 0.7,
+                                         by = "p.adjust",
+                                         select_fun = min)
+return(gsea_results_2)
 }
 
 #Run function and plot enrichment plot for all three stages
+# For plotting, check the following tutorial:
+# https://yulab-smu.top/biomedical-knowledge-mining-book/enrichplot.html
 gsea_mature_vs_early <- gsea_analysis(resLFC_mature_vs_early, "BP", "COMMON")
 
 gsea_plot_mature_vs_early<- gseaplot2(gsea_mature_vs_early, geneSetID = c(1,2,3), 
@@ -398,7 +478,3 @@ gsea_plot_mature_vs_thin <- gseaplot2(gsea_thin_vs_mature, geneSetID = c(1:3),
                                          title = "GSEA of Thin to Mature Biofilm Formation")
 
 plot_list(gsea_plot_early_vs_thin, gsea_plot_mature_vs_thin, gsea_plot_mature_vs_early)
-
-gseaplot(gsea_results, by = "all", geneSetID = 1)
-head(gsea_results)
-
