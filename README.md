@@ -33,8 +33,29 @@ All analysis scripts, including quality control, Salmon quantification, and R St
 
 **Table 2. Summar statistics of SRR10551657 - SRR10551665 flor yeast samples.** Briefly, fastq sequencing files were quality control checked with FastQC. The table denotes the accession number, the total sequences, sequences flagged as poor quality, sequence length in bp, GC content, and the Phred score outputted across all 50 bp positions. 
 
+<img width="2195" height="1384" alt="20260301_summary_statistics" src="https://github.com/user-attachments/assets/578b9ff4-16e6-44e0-94be-47226fa35e2f" />
+
 **Figure 1. Important summary statistics outputted by MultiQC and FastQC.** Each barplots show the A. percent of mapped reads to the reference transcriptome in millions, and B. the number of mapped reads to the reference transcriptome. Plots were generated in RStudio using the ggplot package. Each bar represents different accession numbers.
 
 #### Quality check of RNA-seq data reveals sufficient quality 
 FastQC quality control revealed that RNA-seq data was of high quality. Specifically, no reads were flagged as poor quality, GC content ranged from 41% - 45% which is slightly higher than the average of 38.3% (Wood et al., 2002), and base sequence Phred scores were 30 (Table 2). Therefore, no trimming was required, and no samples were excluded from the analysis. Quality control summary statistics by MultiQC after Salmon quantification indicate all mapping rate percentages were greater than 80% for samples except for SRR10551660 and SRR10551661 which ranged around 74 – 76%, indicating a generally acceptable mapping rate Fig. 1A). A mapping rate of less than 50% would be concerning as it may indicate sample contamination, poor ribosomal RNA depletion, or problems with data processing (Dobin & Gingeras, 2015). In addition, Fig. 1B show the mapped reads which were in the millions for all samples. Overall, summary statistics show that the RNA-sequencing and mapping reads were ideal and acceptable for gene expression analysis.
+
+**Figure 2. Volcano plots for DEGs in all three pairwise comparison of biofilm development.** Each plot represents A. early to thin, B. thin to mature, and C. early to mature. Red signifies DEGs that are upregulated, blue signifies DEGs that are downregulated, and grey signifies non-significant genes. DEGs were defined as significant if P-value is < 0.05, and absolute value of LFC is >1. 
+
+
+**Figure 3. Heatmap of top 20 differentially expressed genes (DEGs) between all three pairwise comparisons of each biofilm developmental stage.** Each heatmap represents DEGs identified between A. early to thin, B. thin to mature, and C. early to mature stages. Rows represent genes that had the most significant LFC, had variance stabilizing transformation applied, and is scaled by row to highlight expression patterns. Colours on scales indicate that yellow represents higher expression and purple indicates lower expression. Columns represent individual biological replicates (n=3) and is marked by colour for each stage. Hierarchal clustering by biofilm stages on the columns is observed. 
+
+
+<img width="1041" height="956" alt="20260301_Figure_04_PCA_plot" src="https://github.com/user-attachments/assets/18f9f2d5-ef9a-45f6-813e-e22d8c150add" />
+
+**Figure 4. PCA plot of RNA-seq flor yeast data.** Principal component analysis (PCA) plot illustrating 9 flor yeast samples, showing clear distinctions for each developmental biofilm stages: early (red), mature (green), and thin (blue). Each point is labeled with its accession number. Principal component (PC) PC1 and PC2 explain 66% and 24% of variance, respectively. 
+
+## Significant genes observed for all three stage comparisons
+Volcano plots indicate that there are many significant genes that are either upregulated or downregulated across all three pairwise comparisons (Fig. 2A-C). However, this does not identify the names of the significant genes. Therefore, the top significant 20 genes were extracted after apeglm LFC shrinkage for each stage transition (Fig. 4A-C). It is important to note that since each heatmap is scaled independently, relative gene expression is only comparable within that specific comparison only and not throughout all 3 heatmaps. *FIT3* (Facilitator of Iron Transport 3) and PHR1 (PHotoreactivation Repair deficient 1) were upregulated in early samples relative to thin samples (Fig. 3A). In fact, FIT3 is a mannoprotein protein that helps with iron homeostasis and uptake in the yeast cell wall (Protchenko et al., 2001) while PHR1 responds to DNA damage (Sebastian & Sancar, 1991). *AHD7* (Alcohol DeHydrogenase 7), and *DAK2* (DihydroxyAcetone Kinase 2), genes that reduces and detoxifies aldehydes and detoxification of dihydroxyacetone, respectively, were highly expressed in thin samples compared to mature samples. 
+
+**Figure 5. Gene set enrichment analysis (GSEA) enrichment plot for each biofilm comparisons groups.** Enrichment plots for A. Early to Thin, B. Thin to Mature, and C. Early to Mature. The curves show the enrichment score for the top 3 gene sets identified for each comparison. Each tick represents a gene that falls within the ranked list. The lower panel denotes the ranking metric of how each gene is ranked. 
+
+
+**Figure 6. KEGG enrichment analysis for each stage comparison.** Dot plots for A. Early to Thin, B. Thin to Mature, and C. Early to Mature. The size of the dots represents the gene ratio associated with the KEGG term. The scale colours represent the adjusted P-value < 0.05 that has been corrected with Benjamini-Hochberg method. The size of the circle represents the gene ratio. The cluster show both upregulated and downregulated pathways.
+
 
