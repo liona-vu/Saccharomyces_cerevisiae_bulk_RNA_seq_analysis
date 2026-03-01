@@ -117,8 +117,7 @@ res_mature_vs_thin <- results(dds_2, contrast= c("stage", "Mature", "Thin"))
 res_mature_vs_early
 res_thin_vs_early
 res_mature_vs_thin
-resLFC_mature_vs_early["FIT3", ]
-resLFC_mature_vs_thin["FIT3", ]
+
 #Shrink LFC for better and accurate gene counts
 resLFC_thin_vs_early <- lfcShrink(dds_2, coef="stage_Thin_vs_Early", type="apeglm")
 resLFC_mature_vs_early <- lfcShrink(dds_2, coef ="stage_Mature_vs_Early", type="apeglm")
@@ -181,6 +180,7 @@ vp_1 <- volcano_plot_fn(resLFC_mature_vs_early, "Early to Mature")
 vp_2 <- volcano_plot_fn(resLFC_thin_vs_early, "Early to Thin")
 vp_3 <- volcano_plot_fn(resLFC_mature_vs_thin, "Thin to Mature")
 
+#put all volcano plots next to each other
 grid.arrange(vp_2, vp_3, vp_1, ncol = 2)
 
 # Make function to take LFC shrink results, filter by padj< 0.05, and select the top 20 genes
@@ -205,11 +205,13 @@ mat_mature_vs_early <- assay(vsd)[gene_names_mature_vs_early, ]
 annotate_colours <- data.frame(Stage = factor(rep(c("Mature", "Thin", "Early"), 
                                                   each = 3)))
 
+#Creating annotation data to demarcate which samples belong to which biofilm stage,instead of constantly checking metadata
 rownames(annotate_colours) <- colnames(mat_mature_vs_early)
 ann_colours <- list(Stage = c("Mature" = "#E495A5",
                               "Thin" = "#86B875",
                               "Early" = "#7DB0DD"))
 
+#plot heatmap
 p5 <- pheatmap(mat_mature_vs_early, 
                color = inferno(100),
          scale = "row",
@@ -222,7 +224,7 @@ p5 <- pheatmap(mat_mature_vs_early,
          annotation_col = annotate_colours,
          annotation_colors = ann_colours)
 
-
+#repeat with other stages
 gene_names_thin_vs_early <- top_genes(resLFC_thin_vs_early)
 mat_thin_vs_early <- assay(vsd)[gene_names_thin_vs_early, ]
 
@@ -353,9 +355,13 @@ compare_early_vs_mature <- gene_expression_compare(resLFC_mature_vs_early, "BP")
 dot_plot_3 <- dotplot(compare_early_vs_mature, showCategory = 10, 
                       title = "GO Biological Processes \n Thin vs Mature Stage")
 
+#plot all dotplots together
 grid.arrange(dot_plot_1, dot_plot_2, dotplot_3, ncol= 3, nrow = 1)
 
-#kegg analysis
+# ====================================================
+# kegg analysis
+# ====================================================
+
 # make function for kegg analysis
 kegg_analysis <- function(LFC_results) {
   
