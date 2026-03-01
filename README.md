@@ -27,35 +27,151 @@ All analysis scripts, including quality control, Salmon quantification, and R St
 ## Results
 <img width="581" height="272" alt="Screenshot 2026-03-01 at 12 05 50 AM" src="https://github.com/user-attachments/assets/edf94b57-9a85-4cd2-a274-c3b977bbed9b" />
 
-**Table 1. Metadata of the I-329 flor yeast samples.** Each accession number corresponds to a biofilm stage, with each stage containing 3 biological replicates (n=3) for a total of 9 samples. The information was adapted from the study by (Mardanov et al., 2020).
+**Table 1. Metadata of the I-329 flor yeast samples.** Each accession number corresponds to a biofilm stage, with each stage containing 3 biological replicates (n=3) for a total of 9 samples. The information was adapted from the study by (Mardanov et al., 2020). 
+
+<br>
+
+#### Quality check of RNA-seq data reveals sufficient quality 
+FastQC quality control revealed that RNA-seq data was of high quality. Specifically, no reads were flagged as poor quality, GC content ranged from 41% - 45% which is slightly higher than the average of 38.3% (Wood et al., 2002), and base sequence Phred scores were 30 (Table 2). Therefore, no trimming was required, and no samples were excluded from the analysis. Quality control summary statistics by MultiQC after Salmon quantification indicate all mapping rate percentages were greater than 80% for samples except for SRR10551660 and SRR10551661 which ranged around 74 – 76%, indicating a generally acceptable mapping rate Fig. 1A). A mapping rate of less than 50% would be concerning as it may indicate sample contamination, poor ribosomal RNA depletion, or problems with data processing (Dobin & Gingeras, 2015). In addition, Fig. 1B show the mapped reads which were in the millions for all samples. Overall, summary statistics show that the RNA-sequencing and mapping reads were ideal and acceptable for gene expression analysis.
+
+<br>
 
 <img width="575" height="276" alt="Screenshot 2026-03-01 at 12 06 59 AM" src="https://github.com/user-attachments/assets/bee5bfa7-450f-450a-8028-6c223b4fd3c8" />
 
 **Table 2. Summar statistics of SRR10551657 - SRR10551665 flor yeast samples.** Briefly, fastq sequencing files were quality control checked with FastQC. The table denotes the accession number, the total sequences, sequences flagged as poor quality, sequence length in bp, GC content, and the Phred score outputted across all 50 bp positions. 
 
-<img width="2195" height="1384" alt="20260301_summary_statistics" src="https://github.com/user-attachments/assets/578b9ff4-16e6-44e0-94be-47226fa35e2f" />
+<br>
+
+<img width="2158" height="1384" alt="20260301_figure_01_summary_statistics" src="https://github.com/user-attachments/assets/c982d32b-e04a-4bca-8caf-50b1a2a41fc1" />
 
 **Figure 1. Important summary statistics outputted by MultiQC and FastQC.** Each barplots show the A. percent of mapped reads to the reference transcriptome in millions, and B. the number of mapped reads to the reference transcriptome. Plots were generated in RStudio using the ggplot package. Each bar represents different accession numbers.
 
-#### Quality check of RNA-seq data reveals sufficient quality 
-FastQC quality control revealed that RNA-seq data was of high quality. Specifically, no reads were flagged as poor quality, GC content ranged from 41% - 45% which is slightly higher than the average of 38.3% (Wood et al., 2002), and base sequence Phred scores were 30 (Table 2). Therefore, no trimming was required, and no samples were excluded from the analysis. Quality control summary statistics by MultiQC after Salmon quantification indicate all mapping rate percentages were greater than 80% for samples except for SRR10551660 and SRR10551661 which ranged around 74 – 76%, indicating a generally acceptable mapping rate Fig. 1A). A mapping rate of less than 50% would be concerning as it may indicate sample contamination, poor ribosomal RNA depletion, or problems with data processing (Dobin & Gingeras, 2015). In addition, Fig. 1B show the mapped reads which were in the millions for all samples. Overall, summary statistics show that the RNA-sequencing and mapping reads were ideal and acceptable for gene expression analysis.
+<br>
+
+#### Differentially expressed genes observed for all three stage comparisons
+Using an adjusted p-value of < 0.05 and absolute value of LFC > 1, 496 upregulated genes and 450 downregulated genes were identified in the early to thin comparison, 641 upregulated genes and 472 downregulated genes were identified in the thin to mature comparison, and 954 upregulated genes and 778 downregulated genes were identified in the early to mature comparison (Table 3). Volcano plots also visually indicate that there are many significant genes that are either upregulated or downregulated across all three pairwise comparisons (Fig. 2A-C). 
+
+<br>
+
+<img width="722" height="116" alt="Screenshot 2026-03-01 at 11 49 57 AM" src="https://github.com/user-attachments/assets/58ee5340-4563-4287-94df-b73d330145a7" />
+
+**Table 3. Summary table of DEGs across all 3 stage comparisons.** Comparisons between biofilm stages where the following the padj value cutoff and the lof2FoldChange (LFC) are applied. Both upregulated and downregulated genes are observed throughout all stage comparisons along with non-significant genes.
+
+<br>
+
+<img width="2172" height="1535" alt="20260301_figure_02_volcano_plots" src="https://github.com/user-attachments/assets/4bb898a9-221a-4cb9-b7b1-86458bc6f477" />
 
 **Figure 2. Volcano plots for DEGs in all three pairwise comparison of biofilm development.** Each plot represents A. early to thin, B. thin to mature, and C. early to mature. Red signifies DEGs that are upregulated, blue signifies DEGs that are downregulated, and grey signifies non-significant genes. DEGs were defined as significant if P-value is < 0.05, and absolute value of LFC is >1. 
 
+<br>
+
+#### Certain genes have altered expression in specific stage comparisons
+The top 20 significant genes were extracted after apeglm LFC shrinkage for each stage transition (Fig. 3A-C). It is important to note that since each heatmap is scaled independently, relative gene expression is only comparable within that specific comparison only and not throughout all 3 heatmaps. FIT3 (Facilitator of iron transport 3) and PHR1 (Photoreactivation repair deficient 1) were upregulated in early samples relative to thin samples (Fig. 3A). In fact, FIT3 is a mannoprotein protein that helps with iron homeostasis and uptake in the yeast cell wall (Protchenko et al., 2001) while PHR1 responds to DNA damage (Sebastian & Sancar, 1991). ADH7 (Alcohol dehydrogenase 7), and DAK2 (Dihydroxyacetone kinase 2), genes that reduces and detoxifies aldehydes and detoxification of dihydroxyacetone, respectively, were highly expressed in thin samples compared to mature samples. REE1 (Regulation of enolase) is lowly expressed in the thin stage compared to mature (Fig. 3B) but is highly expressed in mature samples compared to early samples (Fig. 3C) which was also consistent with literature findings (Mardanov et al., 2020). Finally, AIF1 (Apoptosis-Inducing Factor 1) and HXT13 (hexose transporter 13) is highly expressed in mature samples compared to early (Fig. 3C). Overall, earlier samples were enriched in stress and iron homeostasis, thin stage showed increase expression in detoxification of intermediate metabolites, and mature stages show increased mitochondrial and alternative carbon metabolism.
+
+<br>
+
+<img width="2383" height="1407" alt="20260301_Figure_03_heatmap" src="https://github.com/user-attachments/assets/09646717-aff4-4de1-8865-1c9a505889ef" />
 
 **Figure 3. Heatmap of top 20 differentially expressed genes (DEGs) between all three pairwise comparisons of each biofilm developmental stage.** Each heatmap represents DEGs identified between A. early to thin, B. thin to mature, and C. early to mature stages. Rows represent genes that had the most significant LFC, had variance stabilizing transformation applied, and is scaled by row to highlight expression patterns. Colours on scales indicate that yellow represents higher expression and purple indicates lower expression. Columns represent individual biological replicates (n=3) and is marked by colour for each stage. Hierarchal clustering by biofilm stages on the columns is observed. 
 
+<br>
+
+#### PCA and heatmap shows clustering of yeast samples by biofilm stages
+Hierarchal clustering of the top 20 DEGs show that for each pairwise comparison, all biological replicates grouped by biofilm stages and indicates stage-specific expression (Fig. 3A-C). To fully determine the structure of the dataset, the dimensional reduction technique, PCA was applied to all 9 flor yeast samples, revealing 3 distinct clusters corresponding to different biofilm stages: early, thin, and mature (Fig. 4). PC1 and PC2 explain 66% and 24% of variance, respectively. In fact, the PCA plot clustering by biofilm stages is in accordance with the grouping in Fig. 3A-C. In summary, each biofilm developmental stage shows stage-specific gene expression with clustering observed.
+
+<br>
 
 <img width="1041" height="956" alt="20260301_Figure_04_PCA_plot" src="https://github.com/user-attachments/assets/18f9f2d5-ef9a-45f6-813e-e22d8c150add" />
 
 **Figure 4. PCA plot of RNA-seq flor yeast data.** Principal component analysis (PCA) plot illustrating 9 flor yeast samples, showing clear distinctions for each developmental biofilm stages: early (red), mature (green), and thin (blue). Each point is labeled with its accession number. Principal component (PC) PC1 and PC2 explain 66% and 24% of variance, respectively. 
 
-## Significant genes observed for all three stage comparisons
-Volcano plots indicate that there are many significant genes that are either upregulated or downregulated across all three pairwise comparisons (Fig. 2A-C). However, this does not identify the names of the significant genes. Therefore, the top significant 20 genes were extracted after apeglm LFC shrinkage for each stage transition (Fig. 4A-C). It is important to note that since each heatmap is scaled independently, relative gene expression is only comparable within that specific comparison only and not throughout all 3 heatmaps. *FIT3* (Facilitator of Iron Transport 3) and PHR1 (PHotoreactivation Repair deficient 1) were upregulated in early samples relative to thin samples (Fig. 3A). In fact, FIT3 is a mannoprotein protein that helps with iron homeostasis and uptake in the yeast cell wall (Protchenko et al., 2001) while PHR1 responds to DNA damage (Sebastian & Sancar, 1991). *AHD7* (Alcohol DeHydrogenase 7), and *DAK2* (DihydroxyAcetone Kinase 2), genes that reduces and detoxifies aldehydes and detoxification of dihydroxyacetone, respectively, were highly expressed in thin samples compared to mature samples. 
+<br>
+
+#### GO biological processes and pathways are relevant to biofilm formation
+GSEA was employed for all 3 pairwise comparisons. cytoplasmic translation was determined to be one of the first gene set name in the early to thin biofilm transition between ORA and GSEA (Fig. 6A). Energy reserve metabolic process was identified as the top pathway which is consistent with the ORA (Fig. 6B). Finally, mitochondrion organization was identified as the one of the pathways during the early to mature transition (Fig. 6C). 
+
+Finally, KEGG analysis was conducted to determine relevant pathways for each biofilm stage. With a p-value cutoff of 0.05, 27, 21, and 29 significant pathways are observed in the early to thin transition, thin to mature, and early to mature comparisons, respectively. In fact, the early to thin stage show upregulated KEGG pathways in ribosome, and upregulated and downregulation of biosynthesis of secondary metabolites (Fig. 6A). The thin to mature comparison has upregulated starch and sucrose metabolism (Fig. 6B). Lastly, the early to mature comparison has pathways involved in the mitochondria such as citrate cycle (TCA cycle) and oxidative phosphorylation (Fig. 6C).
+
+<br>
+<img width="1536" height="696" alt="20260301_Figure_05_GSEA" src="https://github.com/user-attachments/assets/73f8722b-b04c-4552-95c1-8455d7a67d46" />
 
 **Figure 5. Gene set enrichment analysis (GSEA) enrichment plot for each biofilm comparisons groups.** Enrichment plots for A. Early to Thin, B. Thin to Mature, and C. Early to Mature. The curves show the enrichment score for the top 3 gene sets identified for each comparison. Each tick represents a gene that falls within the ranked list. The lower panel denotes the ranking metric of how each gene is ranked. 
 
+<br>
+
+<img width="2186" height="1100" alt="20260301_figure_06_KEGG_dotplot" src="https://github.com/user-attachments/assets/ac446587-04ee-47b6-a46e-932186f3eebd" />
 
 **Figure 6. KEGG enrichment analysis for each stage comparison.** Dot plots for A. Early to Thin, B. Thin to Mature, and C. Early to Mature. The size of the dots represents the gene ratio associated with the KEGG term. The scale colours represent the adjusted P-value < 0.05 that has been corrected with Benjamini-Hochberg method. The size of the circle represents the gene ratio. The cluster show both upregulated and downregulated pathways.
 
+## Discussion
 
+#### Differentially Expressed Genes are Related to Biofilm Processes
+The analysis here provides a detailed analysis of the transcriptional landscape at different stages of flor yeast biofilm formation during sherry wine manufacturing. These stages represent the transition from flocculent yeast growth to a mature and specialized biofilm. During the early-to-thin transition, PHR1 was identified as significantly upregulated in early samples compared to thin samples during the early to thin transition (Fig. 3A). In fact, increased expression of PHR1 indicates that DNA repair mechanism is required suggesting that flor yeast cells are under environmental stress that is caused by encountering environments with high ethanol content and aldehydes. Consistent with the current knowledge, yeast cells are most likely stressed when they are adapting to a new environment during early biofilm formation especially and changing from flocculent or free-floating structure to a structured biofilm (Verstrepen & Klis, 2006). Iron homeostasis also seemed to be altered during the early biofilm development. While FIT3 was identified in this analysis but not reported by (Mardanov et al., 2020), other iron related genes such as FTR1 and FET3 were highly expressed at the thin biofilm stage, suggesting a form of agreement that iron homeostasis is altered during the initial cell adhesion and attachment stage (Mardanov et al., 2020). In fact, ISU1, a gene involved in iron homeostasis during fermentation stress response (Marks et al., 2008), has been reported to respond to fermentation-associated stress conditions. Collectively, these findings suggests that iron homeostasis is altered when yeast cells encounter stressful conditions.
+
+The ability of organisms to adapt to its changing environment is necessary for its survival. As the biofilm progresses to the thin to mature stage, the transcriptional landscape transitions from stress related responses to changes in metabolism. Elevated expression of DAK2 and ADH7 in the thin stage compared to the mature stage (Fig. 3B) suggests that flor yeast cells are undergoing a metabolic transition stage. In fact, DAK2 converts dihydroxyacetone to dihydroxyacetone phosphate and ADH7 converts aldehydes to alcohols. As flor yeast biofilm stages progresses, there is a build-up of toxic substances such as dihydroxyacetone and aldehydes. In fact, this pattern was consistent with the sample metadata where there is an increase of aldehydes (mg/l) across biofilm stages; 382.8 (early), 531.3 (thin), and 668.8 (mature) (Mardanov et al., 2020). In fact, the upregulation of ADH7 is noteworthy given that there is evidence suggesting that  its mRNA is abundant in yeast in the presence of vanillin, an example of an aldehyde (Ishida et al., 2017). These results suggests that the thin to mature transition represents flor yeast cells shifting their metabolic phase to detoxify aldehydes and dihydroxyacetone.
+Interestingly, AIF1 and HXT13 was determined to be expressed in mature samples compared to early (Fig. 3C). AIF1 is a key regulator of mitochondrial-associated cell death in mammalian cells where it is initially found in the mitochondria before translocating to the nucleus in the presence of apoptotic signals (Wissing et al., 2004). Increased AIF1 expression during the mature stage is consistent with current literature evidence that mitochondrial and oxidative stress genes are activated under mature flor biofilm stage (Mardanov et al., 2020). In addition, a proteome study has report similar findings where there were significant changes in mitochondria proteins during flor yeast velum formation (Moreno-García et al., 2017). HXT13, a hexose transporter, has been reported to be upregulated in S. cerevisiae in the presence of non-fermentable sources such as glycerol and ethanol (Greatrix & van Vuuren, 2006). Together, these findings indicate mature flor yeast biofilms must adapt to the harsh conditions and adapt other metabolic methods to obtain carbon sources. 
+
+#### GSEA and KEGG Analysis 
+Moving forward with biological program analysis, GSEA is a powerful computational analysis tool used to understand the biological processes of yeast biofilm formation when complemented with KEGG analysis. In fact, these approaches also align with previous individual gene specific findings. The early to thin transition GSEA pathways such as ribosomal biogenesis and translation aligns with KEGG terms such as ribosome and biosynthesis of amino acids (Fig 5A, 6A). This supports the finding that early biofilm development involves protein synthesis. Interestingly, biosynthesis of amino acids had both upregulated and downregulated clusters, suggesting a highly dynamic process where certain genes are starting to be downregulated such as fermentable carbon-based metabolism and genes for biofilm adhesion are beginning to be upregulated. 
+The thin to mature transition also has alignment of GSEA and KEGG terms of glycogen biosynthesis process and starch and sucrose metabolism, respectively. This is in line with current knowledge that flor yeast cells adapt its metabolic process to storing carbon. Finally, the early to mature analysis GSEA mitochondrion organization and KEGG citrate cycle (TCA cycle) are in accordance with each other. This aligns with previous findings such as AIF1, where the mitochondria is altered during the mature stage in addition to evidence in literature where they found significantly upregulated mitochondrial-related GO terms  (Mardanov et al., 2020)
+
+#### Caveats and Follow-Up Studies
+Despite being one of the most well-studied model organisms, several DEGs had uncharacterized or unknown functions in the yeast genome database (Cherry et al., 2012). For example, YHR052C-B was identified as top DEG in Fig. 3C, but proteomics studies have identified it as a novel open reading frame protein (He et al., 2018). Therefore, this highlights the need for a complete database to perform a robust and complete analysis to gain a full understanding of flor yeast biofilm development.
+Follow-up is required to validate the differentially expressed genes. For example, real time quantitative polymerase chain reaction (RT-qPCR) should be applied to the top identified DEGs for each biofilm stage. A caveat for transcriptomic analysis is that the findings does not necessarily correlate at the protein level. For example, RNA can be quickly degraded once it travels to the cytoplasm. Therefore, multiomics approaches that includes but is not limited to transcriptomics, proteomics, and metabolomics should be considered to increase the robustness of the findings and to have a complete picture of the transitions between different biofilm formations during wine manufacturing.
+In summary, important genes, and pathways related to biofilm development in flor yeast have been unveiled. 
+
+## References
+Andrews, S. (2010). FastQC: A quality control tool for high throughput sequence data (0.12.1).
+
+Bolger, A. M., Lohse, M., & Usadel, B. (2014). Trimmomatic: a flexible trimmer for Illumina sequence data. Bioinformatics, 30(15), 2114–2120. https://doi.org/10.1093/bioinformatics/btu170
+
+Bray, N. L., Pimentel, H., Melsted, P., & Pachter, L. (2016). Near-optimal probabilistic RNA-seq quantification. Nature Biotechnology, 34(5), 525–527. https://doi.org/10.1038/nbt.3519
+
+Dobin, A., Davis, C. A., Schlesinger, F., Drenkow, J., Zaleski, C., Jha, S., Batut, P., Chaisson, M., & Gingeras, T. R. (2013). STAR: ultrafast universal RNA-seq aligner. Bioinformatics, 29(1), 15–21. https://doi.org/10.1093/bioinformatics/bts635
+
+Dobin, A., & Gingeras, T. R. (2015). Mapping RNA-seq Reads with STAR. Current Protocols in Bioinformatics, 51(1), 11.14.1-11.14.19. https://doi.org/https://doi.org/10.1002/0471250953.bi1114s51
+
+Engel, S. R., Dietrich, F. S., Fisk, D. G., Binkley, G., Balakrishnan, R., Costanzo, M. C., Dwight, S. S., Hitz, B. C., Karra, K., Nash, R. S., Weng, S., Wong, E. D., Lloyd, P., Skrzypek, M. S., Miyasato, S. 
+
+R., Simison, M., & Cherry, J. M. (2014). The Reference Genome Sequence of Saccharomyces cerevisiae: Then and Now. G3 Genes|Genomes|Genetics, 4(3), 389–398. https://doi.org/10.1534/g3.113.008995
+
+Ewels, P., Magnusson, M., Lundin, S., & Käller, M. (2016). MultiQC: summarize analysis results for multiple tools and samples in a single report. Bioinformatics, 32(19), 3047–3048. https://doi.org/10.1093/bioinformatics/btw354
+
+Grüning, B., Dale, R., Sjödin, A., Chapman, B. A., Rowe, J., Tomkins-Tinch, C. H., Valieris, R., Köster, J., & Team, T. B. (2018). Bioconda: sustainable and comprehensive software distribution for the life sciences. Nature Methods, 15(7), 475–476. https://doi.org/10.1038/s41592-018-0046-7
+
+Kawashima, T., Douglass, S., Gabunilas, J., Pellegrini, M., & Chanfreau, G. F. (2014). Widespread Use of Non-productive Alternative Splice Sites in Saccharomyces cerevisiae. PLOS Genetics, 10(4), e1004249-. https://doi.org/10.1371/journal.pgen.1004249
+
+Korotkevich, G., Sukhov, V., & Sergushichev, A. (2019). Fast gene set enrichment analysis. BioRxiv, 060012. https://doi.org/10.1101/060012
+
+Liao, Y., & Shi, W. (2020). Read trimming is not required for mapping and quantification of RNA-seq reads at the gene level. NAR Genomics and Bioinformatics, 2(3), lqaa068. https://doi.org/10.1093/nargab/lqaa068
+
+Love, M. I., Huber, W., & Anders, S. (2014). Moderated estimation of fold change and dispersion for RNA-seq data with DESeq2. Genome Biology, 15(12), 550. https://doi.org/10.1186/s13059-014-0550-8
+
+Mardanov, A. V, Eldarov, M. A., Beletsky, A. V, Tanashchuk, T. N., Kishkovskaya, S. A., & Ravin, N. V. (2020). Transcriptome Profile of Yeast Strain Used for Biological Wine Aging Revealed Dynamic Changes of 
+Gene Expression in Course of Flor Development. Frontiers in Microbiology, Volume 11-2020. https://doi.org/10.3389/fmicb.2020.00538
+
+Nagalakshmi, U., Wang, Z., Waern, K., Shou, C., Raha, D., Gerstein, M., & Snyder, M. (2008). The Transcriptional Landscape of the Yeast Genome Defined by RNA Sequencing. Science, 320(5881), 1344–1349. https://doi.org/10.1126/science.1158441
+
+Patro, R., Duggal, G., Love, M. I., Irizarry, R. A., & Kingsford, C. (2017). Salmon provides fast and bias-aware quantification of transcript expression. Nature Methods, 14(4), 417–419. https://doi.org/10.1038/nmeth.4197
+
+Protchenko, O., Ferea, T., Rashford, J., Tiedeman, J., Brown, P. O., Botstein, D., & Philpott, C. C. (2001). Three Cell Wall Mannoproteins Facilitate the Uptake of Iron in <em>Saccharomyces cerevisiae</em>*. Journal of Biological Chemistry, 276(52), 49244–49250. https://doi.org/10.1074/jbc.M109220200
+
+Ritchie, M. E., Phipson, B., Wu, D., Hu, Y., Law, C. W., Shi, W., & Smyth, G. K. (2015). limma powers differential expression analyses for RNA-sequencing and microarray studies. Nucleic Acids Research, 43(7), e47–e47. https://doi.org/10.1093/nar/gkv007
+
+Robinson, M. D., McCarthy, D. J., & Smyth, G. K. (2010). edgeR: a Bioconductor package for differential expression analysis of digital gene expression data. Bioinformatics, 26(1), 139–140. https://doi.org/10.1093/bioinformatics/btp616
+
+Spies, D., Renz, P. F., Beyer, T. A., & Ciaudo, C. (2019). Comparative analysis of differential gene expression tools for RNA sequencing time course data. Briefings in Bioinformatics, 20(1), 288–298. https://doi.org/10.1093/bib/bbx115
+
+Thawng, C. N., & Smith, G. B. (2023). Transcriptome software results show significant variation among different commercial pipelines. BMC Genomics, 24(1), 662. https://doi.org/10.1186/s12864-023-09683-w
+
+Wickham, H. (2009). ggplot2. Springer New York.
+
+Williams, C. R., Baccarella, A., Parrish, J. Z., & Kim, C. C. (2016). Trimming of sequence reads alters RNA-Seq gene expression estimates. BMC Bioinformatics, 17(1), 103. https://doi.org/10.1186/s12859-016-0956-2
+
+Wood, V., Gwilliam, R., Rajandream, M.-A., Lyne, M., Lyne, R., Stewart, A., Sgouros, J., Peat, N., Hayles, J., Baker, S., Basham, D., Bowman, S., Brooks, K., Brown, D., Brown, S., Chillingworth, T., Churcher, C., Collins, M., Connor, R., … Nurse, P. (2002). The genome sequence of Schizosaccharomyces  pombe. Nature, 415(6874), 871–880. https://doi.org/10.1038/nature724
+
+Wu, D. C., Yao, J., Ho, K. S., Lambowitz, A. M., & Wilke, C. O. (2018). Limitations of alignment-free tools in total RNA-seq quantification. BMC Genomics, 19(1), 510. https://doi.org/10.1186/s12864-018-4869-5
+
+Yu,  Guangchuang, Wang,  Li-Gen, Han,  Yanyan, & He,  Qing-Yu. (2012). clusterProfiler: an R Package for Comparing Biological Themes Among Gene Clusters. OMICS: A Journal of Integrative Biology, 16(5), 284–287. https://doi.org/10.1089/omi.2011.0118
+
+Zhu, A., Ibrahim, J. G., & Love, M. I. (2019). Heavy-tailed prior distributions for sequence count data: removing the noise and preserving large differences. Bioinformatics, 35(12), 2084–2092. https://doi.org/10.1093/bioinformatics/bty895
